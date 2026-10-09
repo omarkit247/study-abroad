@@ -293,13 +293,14 @@ function handleTargets(method: string, rest: string[], body: Json, query: URLSea
           skipped.push({ row: index + 1, reason: 'No name in this row' });
           continue;
         }
-        const fingerprint = `${String(normalised.name).toLowerCase()}|${String(normalised.organization ?? '').toLowerCase()}`;
+        const record = targetSchema.parse({ ...normalised, id: createId('tgt'), createdAt: stamp, updatedAt: stamp });
+        const fingerprint = `${record.name.toLowerCase()}|${record.organization.toLowerCase()}`;
         if (seen.has(fingerprint)) {
-          skipped.push({ row: index + 1, reason: `"${normalised.name}" is already in your list` });
+          skipped.push({ row: index + 1, reason: `"${record.name}" is already in your list` });
           continue;
         }
         seen.add(fingerprint);
-        created.push(targetSchema.parse({ ...normalised, id: createId('tgt'), createdAt: stamp, updatedAt: stamp }));
+        created.push(record);
       } catch (error) {
         skipped.push({ row: index + 1, reason: error instanceof Error ? error.message : 'Could not read this row' });
       }

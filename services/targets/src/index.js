@@ -221,21 +221,21 @@ app.post(
           continue;
         }
 
-        const fingerprint = `${String(merged.name).toLowerCase()}|${String(merged.organization ?? '').toLowerCase()}`;
+        const record = targetSchema.parse({
+          ...merged,
+          id: createId('tgt'),
+          createdAt: now,
+          updatedAt: now,
+        });
+
+        const fingerprint = `${record.name.toLowerCase()}|${record.organization.toLowerCase()}`;
         if (seen.has(fingerprint)) {
-          skipped.push({ row: index + 1, reason: `"${merged.name}" is already in your list` });
+          skipped.push({ row: index + 1, reason: `"${record.name}" is already in your list` });
           continue;
         }
         seen.add(fingerprint);
 
-        created.push(
-          targetSchema.parse({
-            ...merged,
-            id: createId('tgt'),
-            createdAt: now,
-            updatedAt: now,
-          }),
-        );
+        created.push(record);
       } catch (error) {
         skipped.push({ row: index + 1, reason: error instanceof Error ? error.message : 'Could not read this row' });
       }

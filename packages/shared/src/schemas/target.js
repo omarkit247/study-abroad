@@ -9,15 +9,38 @@ import { linkSchema, customFieldSchema } from './profile.js';
  */
 
 const trimmed = z.string().trim();
-const shortText = trimmed.max(300).optional().default('');
+/** Over-long text is cut to fit rather than rejected: one long cell must not cost a whole target. */
+const capped = (max, base = trimmed) =>
+  base.transform((value) => value.slice(0, max).replace(/[\uD800-\uDBFF]$/, '').trimEnd());
+const shortText = capped(300).optional().default('');
 
-export const targetSchema = z.object({
+/**
+ * Scrapers, spreadsheet exports and hand-edited JSON write a missing value as
+ * `null`; for a target that means the same as the key being absent.
+ * @param {unknown} value
+ * @returns {unknown}
+ */
+function withoutNulls(value) {
+  // A target nests three levels at most (row, list, entry); anything deeper is left alone, not walked.
+  const strip = (node, depth) => {
+    if (depth === 0 || !node || typeof node !== 'object') return node;
+    if (Array.isArray(node)) return node.filter((v) => v !== null).map((v) => strip(v, depth - 1));
+    return Object.fromEntries(
+      Object.entries(node)
+        .filter(([, v]) => v !== null)
+        .map(([key, v]) => [key, strip(v, depth - 1)]),
+    );
+  };
+  return strip(value, 3);
+}
+
+const targetObject = z.object({
   id: trimmed.min(1),
   createdAt: trimmed,
   updatedAt: trimmed,
 
-  kind: trimmed.max(40).default('professor'),
-  name: trimmed.min(1, 'Add a name for this target').max(300),
+  kind: capped(40).default('professor'),
+  name: capped(300, trimmed.min(1, 'Add a name for this target')),
   /** University, company, or funding body. */
   organization: shortText,
   department: shortText,
@@ -27,34 +50,44 @@ export const targetSchema = z.object({
   city: shortText,
 
   email: shortText,
-  links: z.array(linkSchema).default([]),
+  links: z
+    .array(linkSchema.extend({ label: capped(80, trimmed.min(1)), url: capped(2000).default('') }))
+    .default([]),
 
-  focusAreas: z.array(trimmed.max(200)).default([]),
+  focusAreas: z.array(capped(200)).default([]),
   /** Free text so "rolling", "1 Dec 2026", or "check site" all work. */
   deadline: shortText,
   /** BCP-47 tag for the outreach language; falls back to the run default. */
-  language: trimmed.max(20).default('en'),
+  language: capped(20).default('en'),
 
-  status: trimmed.max(40).default('new'),
+  status: capped(40).default('new'),
   priority: z.number().int().min(1).max(5).default(3),
 
-  notes: trimmed.max(20000).optional().default(''),
-  tags: z.array(trimmed.max(60)).default([]),
-  customFields: z.array(customFieldSchema).default([]),
+  notes: capped(20000).optional().default(''),
+  tags: z.array(capped(60)).default([]),
+  customFields: z
+    .array(customFieldSchema.extend({ label: capped(120, trimmed.min(1)), value: capped(4000).default('') }))
+    .default([]),
 
   /** Set by the orchestrator after a successful run. */
   lastRunId: shortText,
   lastRunAt: shortText,
 });
 
-export const targetInputSchema = targetSchema
-  .omit({ id: true, createdAt: true, updatedAt: true })
-  .partial()
-  .extend({ name: trimmed.min(1, 'Add a name for this target').max(300) });
+export const targetSchema = z.preprocess(withoutNulls, targetObject);
 
-export const targetPatchSchema = targetSchema
-  .omit({ id: true, createdAt: true, updatedAt: true })
-  .partial();
+export const targetInputSchema = z.preprocess(
+  withoutNulls,
+  targetObject
+    .omit({ id: true, createdAt: true, updatedAt: true })
+    .partial()
+    .extend({ name: capped(300, trimmed.min(1, 'Add a name for this target')) }),
+);
+
+export const targetPatchSchema = z.preprocess(
+  withoutNulls,
+  targetObject.omit({ id: true, createdAt: true, updatedAt: true }).partial(),
+);
 
 /** Bulk import accepts loose rows and normalises them. */
 export const targetImportRowSchema = z
@@ -71,7 +104,7 @@ export const targetImportRowSchema = z
     website: z.string().optional(),
     google_scholar: z.string().optional(),
     scholar: z.string().optional(),
-    links: z.array(z.union([z.string(), linkSchema.partial()])).optional(),
+    links: z.array(z.union([z.string(), z.object({ label: z.string().optional(), url: z.string().optional() })])).optional(),
     others: z.union([z.array(z.string()), z.string()]).optional(),
     focusAreas: z.union([z.string(), z.array(z.string())]).optional(),
     deadline: z.string().optional(),
@@ -107,7 +140,7 @@ function toList(value) {
  * @returns {Record<string, unknown>}
  */
 export function normaliseImportRow(row, makeId) {
-  const parsed = targetImportRowSchema.parse(row);
+  const parsed = targetImportRowSchema.parse(withoutNulls(row));
 
   /** @type {{ id: string, label: string, url: string }[]} */
   const links = [];
@@ -127,7 +160,7 @@ export function normaliseImportRow(row, makeId) {
   for (const other of others) addLink('Link', other);
   for (const link of parsed.links ?? []) {
     if (typeof link === 'string') addLink('Link', link);
-    else addLink(link.label ?? 'Link', link.url ?? '');
+    else addLink(link.label?.trim() || 'Link', link.url ?? '');
   }
 
   const priority = Number(parsed.priority);
