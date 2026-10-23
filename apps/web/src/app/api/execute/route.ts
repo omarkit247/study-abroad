@@ -110,12 +110,13 @@ function describeError(error: unknown, model: string): { message: string; status
     return { message: 'This provider cannot serve the request on your current free account. Choose a model available to your free account or another free provider; no paid fallback was attempted.', status: 400 };
   }
   if (status === 402) return { message: 'The provider requires credits for this request. Choose a free model or another free provider; no paid fallback was attempted.', status: 402 };
-  if (error instanceof Error && error.name === 'APIConnectionTimeoutError') {
+  if (error instanceof OpenAI.APIConnectionTimeoutError) {
     return { message: 'The provider timed out. Try again or choose a faster model.', status: 504 };
   }
-  if (error instanceof Error && error.name === 'APIConnectionError') {
-    return { message: 'The server could not connect to the AI provider. Check the endpoint and try again. Redirects are blocked to protect your API key.', status: 502 };
+  if (error instanceof OpenAI.APIConnectionError) {
+    return { message: 'The server could not connect to the AI provider. Check the endpoint and try again.', status: 502 };
   }
+  if (/provider_redirect_blocked/i.test(message)) return { message: 'The provider endpoint redirected the request. Use its final API base URL. Your key was not forwarded to the redirect destination.', status: 400 };
   if (status === 401) return { message: 'The provider rejected that API key. Check it under Settings, or paste a new one.', status: 401 };
   if (status === 403) return { message: `Your key cannot reach "${model}". Pick a different model under Settings.`, status: 403 };
   if (status === 404) return { message: `Model "${model}" does not exist, or your account has no access to it.`, status: 404 };
@@ -152,7 +153,9 @@ function describeError(error: unknown, model: string): { message: string; status
     return { message: 'The provider is having trouble right now. This target can be retried in a moment.', status: 502 };
   }
 
-  return { message: 'The provider could not complete the request. Check the model ID, endpoint and provider availability.', status: typeof status === 'number' && status >= 400 && status <= 599 ? status : 502 };
+  const kind = error instanceof Error ? error.constructor.name : typeof error;
+  const diagnostic = /^[A-Za-z]{1,40}$/.test(kind) ? kind : 'UnknownError';
+  return { message: `The provider could not complete the request. Diagnostic: ${diagnostic}, HTTP ${status ?? 'unavailable'}. Check the model ID and endpoint.`, status: typeof status === 'number' && status >= 400 && status <= 599 ? status : 502 };
 }
 
 export async function POST(request: Request) {
@@ -192,7 +195,16 @@ export async function POST(request: Request) {
   }
 
   const client = new OpenAI({ apiKey, baseURL: ai.baseURL, maxRetries: 0, timeout: 90_000,
-    fetch: (url, init) => fetch(url, { ...init, redirect: 'error' }),
+    // Workers rejects redirect: 'error'. Manual mode preserves the same
+    // no-forwarding policy without failing before the provider is contacted.
+    fetch: async (url, init) => {
+      const response = await fetch(url, { ...init, redirect: 'manual' });
+      if (response.status >= 300 && response.status < 400) {
+        await response.body?.cancel();
+        return Response.json({ error: { message: 'provider_redirect_blocked' } }, { status: 400 });
+      }
+      return response;
+    },
   });
 
   const payload: Record<string, unknown> = {
