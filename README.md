@@ -288,3 +288,52 @@ career-ops uses local Node tools, Playwright and filesystem storage. It can rema
 a separate local discovery/evaluation companion; this bridge does not claim its
 full runtime can be deployed to Cloudflare Workers Free. No new paid service or
 automated application/email sending is introduced.
+
+
+### Cloudflare Workers deployment (Free-plan target)
+
+The web workspace includes a pinned vinext 1.3.0 Cloudflare build. vinext is beta;
+keep this deployment on a preview URL until browser and live CPU checks pass.
+The Vite configuration forces cloud mode. The eight local microservices are not
+deployed. Only static assets and the stateless `/api/execute` route are included;
+there are no D1, KV, R2, image optimisation or scheduled-job bindings.
+
+From the repository root:
+
+```sh
+npm ci
+npm run build:vinext --workspace @flow/web
+```
+
+Then from `apps/web`:
+
+```sh
+npx wrangler deploy --dry-run --config dist/server/wrangler.json
+npx next typegen
+npm run typecheck
+npm run start:vinext
+```
+
+Next and vinext both generate route types under `.next`; regenerate Next types
+before running the standalone type check when switching build tools.
+
+Before publishing, confirm the account is on **Workers Free** in the Cloudflare
+dashboard. Do not upgrade the plan or enable paid add-ons. Authenticate Wrangler
+locally (`npx wrangler login`), then run `npm run deploy:vinext` from `apps/web`.
+Use the included workers.dev hostname; a purchased domain is unnecessary.
+No deployment has been performed as part of preparing this configuration.
+
+The production build and Wrangler dry run passed. The dry-run Worker bundle was
+approximately 708 KiB gzip. These checks do not establish live CPU consumption
+or browser correctness. Local runtime smoke testing was blocked by this execution
+environment (`uv_interface_addresses`); it has not passed. Check `/career`, `/research`, `/sources`, backup/import,
+and a no-key `/api/execute` request on the preview before using real records.
+If Free-plan runtime limits are exceeded, reduce runtime work instead of enabling
+billing. Build warnings include beta adapter source-map/import optimisation notes.
+
+The core planner, source directory and manual imports do not need an AI key.
+AI pipeline execution uses the configured provider and can incur **separate API
+charges**; leave it unused for a strictly zero-cost workflow. Workspace data and
+API settings stay in this browser's storage: export backups, and do not expect
+cross-device sync. Runs require the browser to remain open. This configuration
+does not introduce automatic scraping, scheduled discovery, or background runs.
