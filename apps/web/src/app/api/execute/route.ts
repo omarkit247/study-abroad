@@ -101,6 +101,21 @@ function describeError(error: unknown, model: string): { message: string; status
   const status = (error as { status?: number })?.status;
   const message = error instanceof Error ? error.message : 'The model call failed.';
 
+  // Classify provider messages without returning their raw text: upstream errors
+  // can echo credentials, URLs or submitted personal material.
+  if (/API_KEY_INVALID|API key not valid|invalid api.?key|API key expired/i.test(message)) {
+    return { message: 'The provider rejected this API key. Use a key issued by the selected provider and save it in Settings.', status: 401 };
+  }
+  if (/FAILED_PRECONDITION|free tier.*(not available|unsupported)|billing.*(enabled|required)/i.test(message)) {
+    return { message: 'This provider cannot serve the request on your current free account. Choose a model available to your free account or another free provider; no paid fallback was attempted.', status: 400 };
+  }
+  if (status === 402) return { message: 'The provider requires credits for this request. Choose a free model or another free provider; no paid fallback was attempted.', status: 402 };
+  if (error instanceof Error && error.name === 'APIConnectionTimeoutError') {
+    return { message: 'The provider timed out. Try again or choose a faster model.', status: 504 };
+  }
+  if (error instanceof Error && error.name === 'APIConnectionError') {
+    return { message: 'The server could not connect to the AI provider. Check the endpoint and try again. Redirects are blocked to protect your API key.', status: 502 };
+  }
   if (status === 401) return { message: 'The provider rejected that API key. Check it under Settings, or paste a new one.', status: 401 };
   if (status === 403) return { message: `Your key cannot reach "${model}". Pick a different model under Settings.`, status: 403 };
   if (status === 404) return { message: `Model "${model}" does not exist, or your account has no access to it.`, status: 404 };
@@ -129,6 +144,9 @@ function describeError(error: unknown, model: string): { message: string; status
     // request did not go through resolveModelConfig, so say that rather than
     // pointing at a field the interface no longer has.
     return { message: `Model "${model}" rejected a parameter this app should not be sending. Please report this.`, status: 400 };
+  }
+  if (status === 400) {
+    return { message: 'The provider rejected the request (HTTP 400). Check that the model supports Chat Completions and is available to your account. For Gemini, use a Google AI Studio key and a supported Gemini model.', status: 400 };
   }
   if (typeof status === 'number' && status >= 500) {
     return { message: 'The provider is having trouble right now. This target can be retried in a moment.', status: 502 };

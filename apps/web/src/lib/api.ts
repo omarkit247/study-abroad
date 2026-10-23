@@ -175,7 +175,7 @@ async function testApiKey(): Promise<{ ok: boolean; message: string }> {
           title: 'Key check',
           userPrompt: 'Reply with the single word: ready',
           outputSchema: null,
-          config: { model: 'gpt-5-mini', temperature: null, reasoningEffort: null, maxOutputTokens: 16, webSearch: false },
+          config: { model: 'gpt-5-mini', temperature: null, reasoningEffort: null, maxOutputTokens: 2048, webSearch: false },
         },
       }),
     });

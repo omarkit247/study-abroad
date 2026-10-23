@@ -1,3 +1,4 @@
+import { getProviderConfig } from './ai-provider';
 import { api, ApiError, CLOUD_MODE } from './api';
 import { getApiKey } from './cloud/api-key';
 import { localId } from './utils';
@@ -242,7 +243,7 @@ export async function parseCv(text: string): Promise<CvFields> {
   const apiKey = CLOUD_MODE ? getApiKey() : undefined;
 
   if (CLOUD_MODE && !apiKey) {
-    throw new CvImportError('Add your OpenAI key under Settings first. Reading a CV needs a real model call.');
+    throw new CvImportError('Add your selected provider’s API key under Settings first. Reading a CV needs a real model call.');
   }
 
   // Hosted: the stateless route, carrying the visitor's own key. Self-hosted:
@@ -253,6 +254,7 @@ export async function parseCv(text: string): Promise<CvFields> {
   try {
     const result = await api.post<{ output: CvFields }>(path, {
       apiKey,
+      ...(CLOUD_MODE ? { ai: getProviderConfig() } : {}),
       context: {},
       step: {
         key: 'cv_import',
