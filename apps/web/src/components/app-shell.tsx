@@ -53,6 +53,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { href: '/applicants', label: 'Professional profiles', icon: UserRound, description: 'Who is applying' },
       { href: '/targets', label: 'Opportunities', icon: Target, description: 'Who you are writing to' },
+      { href: '/sources', label: 'German sources', icon: Target, description: 'Hospitals, professors, jobs and career-ops' },
       { href: '/research', label: 'Research opportunities', icon: SquareTerminal, description: 'Find and track research roles' },
     ],
   },

@@ -62,6 +62,7 @@ export default function ResearchPage() {
   return <>
     <PageHeader eyebrow="Germany first · UAE bridge" title="Research opportunities" description="Find research work, build academic experience and track applications alongside your clinical career." />
     <PageBody className="space-y-6">
+      <Button asChild><Link href="/sources">German databases and career-ops import</Link></Button>
       <Panel>
         <PanelHeader title="Find opportunities" description="Choose a location, specialty and role. Searches open in a new tab and cost no API credits. Verify each result on the employer’s original listing." />
         <div className="p-5 space-y-4">

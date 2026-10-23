@@ -259,3 +259,32 @@ funding, verification dates and deadlines; track application status and open a
 preselected drafting run. These entries are ordinary targets tagged
 `medical-research`, so they use existing storage, export, editing and pipeline
 features. Search links are not an automatically verified vacancy feed.
+
+### German sources and career-ops bridge
+
+`/sources` contains a reviewed directory for hospital/rehabilitation data
+(Destatis and DKV), researchers/projects (DFG GEPRIS), training authorisations
+(ÄKWL and Ärztekammer Nordrhein), and jobs (Ärztestellen and BA Jobsuche).
+Searches accept a hospital/professor name, city and specialty, with German
+specialty terminology. No record is presented as a verified current vacancy.
+
+Access distinctions are explicit: Destatis offers reusable downloads with source
+attribution; other sources are manual lookups until automated access is assessed.
+BA terms expressly restrict robots and unintended API collection, so no BA
+scraper is included. Professor identity and professional contacts should be
+verified on the employing institution’s own website. No contact guessing.
+
+The career-ops bridge was checked against omarkit247/career-ops commit
+374eff1ec7c7e581c8d1d9f0b78eef21a5110363, particularly
+lib/tracker-addition.mjs and tracker-parse.mjs. Paste headed tracker-addition TSV,
+preview records, then import into the existing target workspace. Required
+headers: company, role, status, score; optional url, date, location, notes.
+No Markdown tracker parser, report-file import, live sync or scraper execution is
+included. External status/score stay in notes; imported records start as new.
+The existing importer skips matching position-name/institution pairs; this can
+also skip different listings with identical titles at one institution.
+
+career-ops uses local Node tools, Playwright and filesystem storage. It can remain
+a separate local discovery/evaluation companion; this bridge does not claim its
+full runtime can be deployed to Cloudflare Workers Free. No new paid service or
+automated application/email sending is introduced.
