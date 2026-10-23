@@ -7,13 +7,20 @@ import { Panel, PanelHeader } from '@/components/ui/primitives';
 import { Button } from '@/components/ui/button';
 import { Input, Textarea, Select } from '@/components/ui/field';
 import { CLOUD_MODE } from '@/lib/api';
-import { SPECIALTIES, STAGES, newCareerPlan, loadCareerPlan, saveCareerPlan, parseCareerPlan, type CareerPlan, type Stage } from '@/lib/career';
+import { STAGES, newCareerPlan, loadCareerPlan, saveCareerPlan, parseCareerPlan, type CareerPlan, type Stage } from '@/lib/career';
 
 export default function CareerPage() {
   const [plan, setPlan] = useState<CareerPlan>(newCareerPlan);
   const [ready, setReady] = useState(false);
   const [message, setMessage] = useState('');
   const [dirty, setDirty] = useState(false);
+  const [specialty, setSpecialty] = useState('');
+  function addSpecialty() {
+    const name = specialty.trim();
+    if (!name || name.length > 100 || ['__proto__', 'constructor', 'prototype'].includes(name) || Object.keys(plan.specialtyNotes).length >= 50) { setMessage('Enter a specialty name of 1–100 characters (maximum 50 specialties).'); return; }
+    if (Object.keys(plan.specialtyNotes).some(s => s.toLowerCase() === name.toLowerCase())) { setMessage('That specialty is already listed.'); return; }
+    change({ ...plan, specialtyNotes: { ...plan.specialtyNotes, [name]: '' } }); setSpecialty('');
+  }
   useEffect(() => {
     try { setPlan(loadCareerPlan()); setReady(true); }
     catch (e) { setMessage(`${(e as Error).message} Restore a valid backup to continue.`); }
@@ -87,13 +94,14 @@ export default function CareerPage() {
         </Panel>
         <Panel>
           <PanelHeader title="Explore specialties before committing" description="Compare realistic entry, daily work, operative requirements, training pay, specialist pay and later practice economics. Keep sources and dates beside any figures." />
-          <div className="grid gap-4 p-5 lg:grid-cols-3">{SPECIALTIES.map(s => <label key={s} className="block space-y-2 text-sm"><span className="font-semibold">{s}</span><Textarea rows={7} value={plan.specialtyNotes[s]} placeholder={s === 'Ophthalmology' ? 'Verify operative training requirements with the relevant medical chamber. Record your comfort with procedures, exposure and verified income evidence.' : 'Record exposure, entry requirements, working conditions and sourced income comparisons. Unknowns can stay unknown.'} onChange={e => change({ ...plan, specialtyNotes: { ...plan.specialtyNotes, [s]: e.target.value } })} /></label>)}</div>
+          <div className="flex flex-wrap items-end gap-3 p-5"><label className="text-sm">Another specialty<Input value={specialty} maxLength={100} placeholder="e.g. Psychiatry, cardiology, radiology" onChange={e => setSpecialty(e.target.value)} /></label><Button onClick={addSpecialty}>Add specialty</Button></div>
+          <div className="grid gap-4 p-5 lg:grid-cols-3">{Object.keys(plan.specialtyNotes).map(s => <label key={s} className="block space-y-2 text-sm"><span className="font-semibold">{s}</span><Textarea rows={7} value={plan.specialtyNotes[s]} placeholder={s === 'Ophthalmology' ? 'Verify operative training requirements with the relevant medical chamber. Record your comfort with procedures, exposure and verified income evidence.' : 'Record exposure, entry requirements, working conditions and sourced income comparisons. Unknowns can stay unknown.'} onChange={e => change({ ...plan, specialtyNotes: { ...plan.specialtyNotes, [s]: e.target.value } })} /></label>)}</div>
         </Panel>
       </fieldset>
       <Panel className="p-5 space-y-3">
         <h2 className="font-medium">Turn preparation into applications</h2>
         <p className="text-sm text-[var(--color-text-muted)]">Save changes before opening another screen. Add verified qualifications to your profile, then add German departments or UAE bridge employers as opportunities. The existing pipeline researches targets you supply; it does not automatically discover vacancies.</p>
-        <div className="flex flex-wrap gap-3"><Button asChild><Link href="/applicants">Professional profile</Link></Button><Button asChild><Link href="/targets">Opportunities</Link></Button><Button asChild><Link href="/runs/new">Research and draft</Link></Button></div>
+        <div className="flex flex-wrap gap-3"><Button asChild><Link href="/applicants">Professional profile</Link></Button><Button asChild><Link href="/targets">Opportunities</Link></Button><Button asChild><Link href="/research">Research opportunities</Link></Button><Button asChild><Link href="/runs/new">Research and draft</Link></Button></div>
       </Panel>
     </PageBody>
   </>;

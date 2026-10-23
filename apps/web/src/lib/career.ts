@@ -1,6 +1,6 @@
 import { read, write } from './cloud/store';
 
-export const SPECIALTIES = ['Dermatology', 'Neurology', 'Ophthalmology'] as const;
+export const SPECIALTIES = ['Dermatology', 'Neurology', 'Ophthalmology', 'Gastroenterology', 'Internal medicine', 'Physical medicine and rehabilitation'] as const;
 export const STAGES = ['Not recorded', 'Preparing', 'Submitted', 'Awaiting response', 'Completed'] as const;
 export type Stage = typeof STAGES[number];
 export interface Milestone { id: string; title: string; status: Stage; nextAction: string; due: string; evidence: string }
@@ -11,7 +11,7 @@ export interface CareerPlan {
 export function newCareerPlan(): CareerPlan {
   return {
     version: 1, enabled: false, updatedAt: '',
-    brief: 'Primary goal: medical licensing and residency in Germany. UAE research, teaching or suitable clinical support work is the interim route. Side projects remain secondary. Specialty undecided: explore dermatology, neurology and ophthalmology. Prefer non-surgical work, with ophthalmology a possible exception. High long-term earning potential matters alongside entry prospects and working conditions.',
+    brief: 'Primary goal: medical licensing and residency in Germany. UAE research, teaching or suitable clinical support work is the interim route. Side projects remain secondary. Specialty undecided: explore dermatology, neurology, ophthalmology, gastroenterology, internal medicine, physical medicine and rehabilitation, and other suitable specialties. Prefer non-surgical work, with ophthalmology a possible exception. High long-term earning potential matters alongside entry prospects and working conditions.',
     licensing: '', german: '',
     specialtyNotes: Object.fromEntries(SPECIALTIES.map(s => [s, ''])),
     milestones: [
@@ -31,13 +31,13 @@ export function parseCareerPlan(value: unknown): CareerPlan {
   const p = value as CareerPlan;
   const str = (v: unknown) => typeof v === 'string' && v.length <= 20000;
   if (p.version !== 1 || typeof p.enabled !== 'boolean' || ![p.brief, p.licensing, p.german, p.updatedAt].every(str) ||
-      !p.specialtyNotes || !SPECIALTIES.every(s => str(p.specialtyNotes[s])) ||
+      !p.specialtyNotes || typeof p.specialtyNotes !== 'object' || Array.isArray(p.specialtyNotes) || Object.keys(p.specialtyNotes).length > 50 || !Object.entries(p.specialtyNotes).every(([name, notes]) => name.trim().length > 0 && name.length <= 100 && !['__proto__', 'constructor', 'prototype'].includes(name) && str(notes)) ||
       !Array.isArray(p.milestones) || p.milestones.length !== 8 ||
       !newCareerPlan().milestones.every(base => p.milestones.some(m => m && m.id === base.id)) ||
       !p.milestones.every(m => [m.id, m.title, m.nextAction, m.due, m.evidence].every(str) && STAGES.includes(m.status) && (!m.due || /^\d{4}-\d{2}-\d{2}$/.test(m.due)))) {
     throw new Error('This file is not a supported career plan. Existing data has not been changed.');
   }
-  return p;
+  return { ...p, specialtyNotes: { ...Object.fromEntries(SPECIALTIES.map(s => [s, ''])), ...p.specialtyNotes } };
 }
 export function loadCareerPlan(): CareerPlan {
   const saved = read<unknown>('career', null);

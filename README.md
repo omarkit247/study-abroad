@@ -245,3 +245,17 @@ notes. The existing profiles, targets and drafting tools remain available.
 For a hosted build set `NEXT_PUBLIC_FLOW_MODE=cloud`. Cloudflare runtime tooling
 and deployment are a separate step; a successful Next.js build alone does not
 verify Workers compatibility or its Free-plan CPU budget.
+
+### Specialty exploration and research opportunities
+
+The specialty notebook also includes gastroenterology, internal medicine and
+physical medicine and rehabilitation, with an Add specialty control for other
+interests. Older career backups gain the new blank categories without replacing
+existing notes or the user's edited brief.
+
+`/research` provides free external search links by location, specialty and role,
+plus a research shortlist. Save original sources, requirements, eligibility,
+funding, verification dates and deadlines; track application status and open a
+preselected drafting run. These entries are ordinary targets tagged
+`medical-research`, so they use existing storage, export, editing and pipeline
+features. Search links are not an automatically verified vacancy feed.
