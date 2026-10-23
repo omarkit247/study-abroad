@@ -1,3 +1,4 @@
+import { validateProvider, defaultProvider, type ProviderConfig } from '@/lib/ai-provider';
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { resolveModelConfig } from '@flow/shared';
@@ -28,6 +29,7 @@ export const maxDuration = 300;
 
 interface ExecuteBody {
   apiKey?: string;
+  ai?: ProviderConfig;
   demoMode?: boolean;
   step?: {
     key?: string;
@@ -99,7 +101,7 @@ function describeError(error: unknown, model: string): { message: string; status
   const status = (error as { status?: number })?.status;
   const message = error instanceof Error ? error.message : 'The model call failed.';
 
-  if (status === 401) return { message: 'OpenAI rejected that API key. Check it under Settings, or paste a new one.', status: 401 };
+  if (status === 401) return { message: 'The provider rejected that API key. Check it under Settings, or paste a new one.', status: 401 };
   if (status === 403) return { message: `Your key cannot reach "${model}". Pick a different model under Settings.`, status: 403 };
   if (status === 404) return { message: `Model "${model}" does not exist, or your account has no access to it.`, status: 404 };
   if (status === 429) {
@@ -115,12 +117,12 @@ function describeError(error: unknown, model: string): { message: string; status
     if (outOfCredit) {
       return {
         message:
-          'Your OpenAI account has no credit left. Add credit at platform.openai.com/settings/organization/billing, then run again.',
+          'Your provider quota is exhausted. Wait for the free quota to reset or choose another provider.',
         status: 429,
       };
     }
 
-    return { message: 'OpenAI rate-limited this request. Lower the concurrency in the run options and try again.', status: 429 };
+    return { message: 'The provider rate-limited this request. Lower the concurrency in the run options and try again.', status: 429 };
   }
   if (status === 400 && /temperature/i.test(message)) {
     // Should be unreachable: temperature is no longer sent. If it happens, the
@@ -129,10 +131,10 @@ function describeError(error: unknown, model: string): { message: string; status
     return { message: `Model "${model}" rejected a parameter this app should not be sending. Please report this.`, status: 400 };
   }
   if (typeof status === 'number' && status >= 500) {
-    return { message: 'OpenAI is having trouble right now. This target can be retried in a moment.', status: 502 };
+    return { message: 'The provider is having trouble right now. This target can be retried in a moment.', status: 502 };
   }
 
-  return { message, status: typeof status === 'number' ? status : 502 };
+  return { message: 'The provider could not complete the request. Check the model ID, endpoint and provider availability.', status: typeof status === 'number' && status >= 400 && status <= 599 ? status : 502 };
 }
 
 export async function POST(request: Request) {
@@ -153,19 +155,27 @@ export async function POST(request: Request) {
   // Decided from code, never from the request. A workspace stored before the
   // model settings were fixed still holds the old values, and honouring them
   // is how a run ends up sending a parameter the model rejects.
-  const config = resolveModelConfig(step.config);
+  let ai: ProviderConfig;
+  try { ai = validateProvider(body.ai ?? defaultProvider('openai')); }
+  catch (error) { return fail(error instanceof Error ? error.message : 'Invalid provider settings.', 422); }
+  const config = ai.provider === 'openai' ? resolveModelConfig(step.config) : {
+    model: ai.model, temperature: null, reasoningEffort: null,
+    maxOutputTokens: Math.min(8192, Math.max(64, step.config?.maxOutputTokens ?? 4096)), webSearch: false,
+  };
 
   // Demo output is produced in the browser, so reaching here without a key
   // means the caller genuinely intended a live call and has none.
   const apiKey = body.apiKey?.trim();
   if (!apiKey) {
     return fail(
-      'No API key was supplied. Open Settings and add your own OpenAI key — this app never uses a key belonging to whoever deployed it.',
+      'No API key was supplied. Open Settings and add your selected provider’s key — this app never uses a key belonging to whoever deployed it.',
       401,
     );
   }
 
-  const client = new OpenAI({ apiKey, maxRetries: 1 });
+  const client = new OpenAI({ apiKey, baseURL: ai.baseURL, maxRetries: 0, timeout: 90_000,
+    fetch: (url, init) => fetch(url, { ...init, redirect: 'error' }),
+  });
 
   const payload: Record<string, unknown> = {
     model: config.model,
@@ -195,8 +205,24 @@ export async function POST(request: Request) {
   }
 
   try {
-    const response = await client.responses.create(payload as never);
+    let response: unknown;
+    if (ai.provider === 'openai') {
+      response = await client.responses.create(payload as never);
+    } else {
+      const instructions = [step.systemPrompt ?? '',
+        'No web-search tool is available in this call. Use only supplied source material. Mark missing facts as unknown; never claim to have browsed, verified a vacancy or read a URL. Do not invent citations.',
+        ...(step.outputSchema ? ['Return only valid JSON matching this schema: ' + JSON.stringify(step.outputSchema)] : []),
+      ].join('\n\n');
+      const chat = await client.chat.completions.create({
+        model: ai.model,
+        messages: [{ role: 'system', content: instructions }, { role: 'user', content: step.userPrompt }],
+        max_tokens: config.maxOutputTokens ?? 4096,
+      }, { signal: request.signal });
+      if (chat.choices[0]?.finish_reason === 'length') return fail('The model reached its output limit. Shorten the prompt or increase the token limit.', 422);
+      response = chat;
+    }
     const text = readText(response);
+    if (!text.trim()) return fail('The provider returned no text. Try another model or a larger output limit.', 502);
     const output = step.outputSchema ? parseJsonOutput(text) : text;
 
     const usage = (response as { usage?: Record<string, number & Record<string, number>> }).usage ?? {};

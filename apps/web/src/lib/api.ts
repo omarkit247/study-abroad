@@ -1,3 +1,4 @@
+import { getProviderConfig } from '@/lib/ai-provider';
 import type { ApiResponse } from './types';
 import { handleLocalRequest, LocalApiError } from './cloud/local-api';
 import { subscribeToLocalRun, isRunActive, startLocalRun, cancelLocalRun } from './cloud/run-engine';
@@ -156,9 +157,10 @@ export const api = {
  * out it is wrong here rather than forty targets into a run.
  */
 async function testApiKey(): Promise<{ ok: boolean; message: string }> {
+  const ai = getProviderConfig();
   const apiKey = getApiKey();
   if (!apiKey) {
-    return { ok: false, message: 'No API key is set. Add your own OpenAI key above to run for real.' };
+    return { ok: false, message: 'No API key is set. Add your selected provider’s key above to run for real.' };
   }
 
   try {
@@ -167,6 +169,7 @@ async function testApiKey(): Promise<{ ok: boolean; message: string }> {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         apiKey,
+        ai,
         step: {
           key: 'key_check',
           title: 'Key check',

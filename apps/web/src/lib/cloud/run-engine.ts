@@ -1,3 +1,4 @@
+import { getProviderConfig } from '@/lib/ai-provider';
 import {
   createId,
   profileSchema,
@@ -208,6 +209,7 @@ async function execute(
   plan: ReturnType<typeof buildPlan>,
 ): Promise<void> {
   const { options } = entry.run;
+  const ai = getProviderConfig();
   const apiKey = getApiKey();
   let consecutiveFailures = 0;
   let halted = false;
@@ -293,6 +295,7 @@ async function execute(
             signal: entry.controller.signal,
             body: JSON.stringify({
               apiKey,
+              ai,
               step: {
                 key: step.key,
                 title: step.title,

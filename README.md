@@ -337,3 +337,31 @@ charges**; leave it unused for a strictly zero-cost workflow. Workspace data and
 API settings stay in this browser's storage: export backups, and do not expect
 cross-device sync. Runs require the browser to remain open. This configuration
 does not introduce automatic scraping, scheduled discovery, or background runs.
+
+
+### Alternative AI providers (hosted cloud mode)
+
+Settings now supports OpenRouter free models, Google Gemini, Groq, OpenAI and
+custom public HTTPS OpenAI-compatible Chat Completions endpoints. Select the
+provider, enter its model ID, click Save provider settings, then save the matching
+API key and use Test it. Non-OpenAI providers override the OpenAI model selections
+in pipeline steps. OpenAI retains existing per-step model settings.
+
+New browsers default to `openrouter/free`; saved legacy OpenAI keys keep their
+provider. OpenRouter permits only that router or IDs ending in `:free`, without
+paid fallback. Gemini/Groq free quotas depend on account, region and model; stay
+on a free provider plan. A custom endpoint is not a guarantee of zero cost.
+Keys are isolated by provider and custom endpoint and excluded from workspace
+exports. The app server handles keys transiently to forward requests; only use
+trusted deployments and endpoints. Custom APIs need compatible bearer-key auth.
+
+Non-OpenAI calls do not use a web-search tool. Prompts explicitly restrict them
+to supplied material and unknown facts must remain unknown. JSON outputs are
+requested and parsed, but individual models may not reliably follow schemas.
+The source directory remains manual discovery. No live paid fallback is used.
+
+Validation: provider routing mocked across all five options, free-model guard,
+unsafe endpoint rejection, key isolation and JSON parsing passed; Cloudflare
+production build and type check passed. No real provider key was available for
+an authenticated inference test. This provider update awaits deployment because
+the Cloudflare connector requested reauthentication on 24 October 2026.

@@ -1,3 +1,4 @@
+import { providerKeyScope, PROVIDER_STORAGE } from '../ai-provider';
 /**
  * The visitor's own OpenAI key.
  *
@@ -15,8 +16,8 @@
  * The key is never written to a run record, a log, or an exported workspace.
  */
 
-const STORAGE_KEY = 'flow:v1:openai-key';
-const REMEMBER_KEY = 'flow:v1:openai-key-remember';
+const storageKey = () => `flow:v1:${providerKeyScope()}-key`;
+const rememberKey = () => `${storageKey()}-remember`;
 
 export interface ApiKeyState {
   present: boolean;
@@ -44,8 +45,8 @@ export function getApiKey(): string {
     // Session first: a key set for this session only should win over a stale
     // remembered one, so "use a different key just this once" behaves.
     return (
-      window.sessionStorage.getItem(STORAGE_KEY)?.trim() ||
-      window.localStorage.getItem(STORAGE_KEY)?.trim() ||
+      window.sessionStorage.getItem(storageKey())?.trim() ||
+      window.localStorage.getItem(storageKey())?.trim() ||
       ''
     );
   } catch {
@@ -58,7 +59,7 @@ export function getApiKeyState(): ApiKeyState {
   let remembered = false;
 
   try {
-    remembered = typeof window !== 'undefined' && window.localStorage.getItem(REMEMBER_KEY) === 'true';
+    remembered = typeof window !== 'undefined' && window.localStorage.getItem(rememberKey()) === 'true';
   } catch {
     remembered = false;
   }
@@ -75,8 +76,8 @@ export function setApiKey(key: string, remember: boolean): ApiKeyState {
 
   const store = storageFor(remember);
   if (store && value) {
-    store.setItem(STORAGE_KEY, value);
-    if (remember) window.localStorage.setItem(REMEMBER_KEY, 'true');
+    store.setItem(storageKey(), value);
+    if (remember) window.localStorage.setItem(rememberKey(), 'true');
   }
 
   notify();
@@ -87,9 +88,9 @@ export function clearApiKey(): void {
   if (typeof window === 'undefined') return;
 
   try {
-    window.localStorage.removeItem(STORAGE_KEY);
-    window.localStorage.removeItem(REMEMBER_KEY);
-    window.sessionStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(storageKey());
+    window.localStorage.removeItem(rememberKey());
+    window.sessionStorage.removeItem(storageKey());
   } catch {
     /* a browser with storage disabled has nothing to clear */
   }
@@ -104,7 +105,7 @@ export function clearApiKey(): void {
  */
 export function looksLikeKey(key: string): boolean {
   const value = key.trim();
-  return value.length >= 20 && !/\s/.test(value);
+  return value.length >= 8 && !/\s/.test(value);
 }
 
 /* Subscription, so the header badge and the settings tab agree without
@@ -122,13 +123,13 @@ export function subscribeToApiKey(listener: Listener): () => void {
 
   // Another tab changing the key should update this one.
   const onStorage = (event: StorageEvent) => {
-    if (event.key === STORAGE_KEY || event.key === REMEMBER_KEY) listener();
+    if (event.key === storageKey() || event.key === rememberKey() || event.key === PROVIDER_STORAGE) listener();
   };
 
-  if (typeof window !== 'undefined') window.addEventListener('storage', onStorage);
+  if (typeof window !== 'undefined') { window.addEventListener('storage', onStorage); window.addEventListener('flow-provider-change', listener); }
 
   return () => {
     listeners.delete(listener);
-    if (typeof window !== 'undefined') window.removeEventListener('storage', onStorage);
+    if (typeof window !== 'undefined') { window.removeEventListener('storage', onStorage); window.removeEventListener('flow-provider-change', listener); }
   };
 }
