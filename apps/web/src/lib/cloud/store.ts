@@ -14,7 +14,7 @@
 const PREFIX = 'flow:v1:';
 
 /** Collections mirror the JSON files the self-hosted services own. */
-export type Collection = 'profiles' | 'targets' | 'prompts' | 'pipelines' | 'runs' | 'settings';
+export type Collection = 'profiles' | 'targets' | 'prompts' | 'pipelines' | 'runs' | 'settings' | 'career';
 
 /**
  * Reads a collection. Returns the fallback on anything unreadable rather than
@@ -78,12 +78,13 @@ export function exportWorkspace(): Record<string, unknown> {
     pipelines: readList('pipelines'),
     runs: readList('runs'),
     settings: read('settings', {}),
+    career: read('career', null),
   };
 }
 
 export function clearWorkspace(): void {
   if (typeof window === 'undefined') return;
-  for (const collection of ['profiles', 'targets', 'prompts', 'pipelines', 'runs', 'settings'] as Collection[]) {
+  for (const collection of ['profiles', 'targets', 'prompts', 'pipelines', 'runs', 'settings', 'career'] as Collection[]) {
     window.localStorage.removeItem(`${PREFIX}${collection}`);
   }
 }
@@ -93,7 +94,7 @@ export function workspaceSize(): number {
   if (typeof window === 'undefined') return 0;
 
   let total = 0;
-  for (const collection of ['profiles', 'targets', 'prompts', 'pipelines', 'runs', 'settings'] as Collection[]) {
+  for (const collection of ['profiles', 'targets', 'prompts', 'pipelines', 'runs', 'settings', 'career'] as Collection[]) {
     total += window.localStorage.getItem(`${PREFIX}${collection}`)?.length ?? 0;
   }
   return total;

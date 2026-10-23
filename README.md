@@ -223,3 +223,25 @@ Read every draft before you send it. The system is a first draft, not a delegate
 ## License
 
 MIT
+
+## Medical career workspace
+
+The home page now opens `/career`: a Germany-first medical career planner with
+UAE bridge opportunities and exploratory dermatology, neurology and ophthalmology
+notes. The existing profiles, targets and drafting tools remain available.
+
+- Edit and explicitly save the career brief, current licensing evidence and German
+  language status. No milestone is pre-marked complete.
+- Track eight planning areas with status, next action, follow-up date and evidence.
+  These categories do not determine legal eligibility or trigger reminders.
+- Export/restore a career JSON backup; imports are validated before replacing the
+  editor and require Save to persist. The full cloud workspace export includes it.
+- Enable brief inclusion to send the saved brief, licensing/language fields and
+  specialty notes in live cloud-mode pipeline calls. Milestone correspondence
+  notes are excluded. This integration does not change local microservices.
+- Planning uses browser storage and needs no API key or paid database. AI runs
+  still use the visitor's API credits. Browser data does not automatically sync.
+
+For a hosted build set `NEXT_PUBLIC_FLOW_MODE=cloud`. Cloudflare runtime tooling
+and deployment are a separate step; a successful Next.js build alone does not
+verify Workers compatibility or its Free-plan CPU budget.

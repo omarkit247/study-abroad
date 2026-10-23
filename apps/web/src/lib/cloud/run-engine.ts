@@ -14,6 +14,7 @@ import { generateDemoOutput } from '@flow/llm/demo';
 import { readList, writeList, read } from './store';
 import { buildPlan, LocalApiError } from './local-api';
 import { getApiKey } from './api-key';
+import { loadCareerPlan, careerPromptContext } from '../career';
 import type { Run, RunItem, RunStep } from '@/lib/types';
 
 /**
@@ -255,6 +256,7 @@ async function execute(
       try {
         const context = buildContext(profile, target, options as unknown as Record<string, unknown>, stepOutputs);
         const system = renderTemplate(step.systemPrompt ?? '', context);
+        system.text += careerPromptContext(loadCareerPlan());
         const user = renderTemplate(step.userPrompt, context);
         const missingVariables = [...new Set([...system.missing, ...user.missing])];
 
