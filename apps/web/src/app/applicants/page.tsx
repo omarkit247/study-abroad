@@ -89,12 +89,12 @@ export default function ApplicantsPage() {
   return (
     <>
       <PageHeader
-        title="Applicants"
+        title="Professional profiles"
         description="The person applying. Everything the system writes is built from this profile, so the more it holds the less generic the drafts are."
         action={
           <Button variant="primary" onClick={() => setCreating(true)}>
             <Plus />
-            New applicant
+            New profile
           </Button>
         }
       />
@@ -213,7 +213,7 @@ export default function ApplicantsPage() {
 
       <Dialog open={creating} onOpenChange={setCreating}>
         <DialogContent
-          title="New applicant"
+          title="New profile"
           description="Start with a name. Every other field can be filled in afterwards."
         >
           <DialogBody>

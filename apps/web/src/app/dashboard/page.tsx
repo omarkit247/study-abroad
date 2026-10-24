@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { CareerOverview } from '@/components/career-overview';
 import useSWR from 'swr';
 import { ArrowRight, UserRound, Target, Workflow, PlayCircle, Inbox } from 'lucide-react';
 import { fetcher } from '@/lib/api';
@@ -40,8 +41,8 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        title="Dashboard"
-        description="Everything that has run, and what to do next."
+        title="Career dashboard"
+        description="Your next actions, opportunity work and application drafts."
         action={
           readyToRun ? (
             <Button asChild variant="primary">
@@ -55,6 +56,7 @@ export default function DashboardPage() {
       />
 
       <PageBody className="space-y-6">
+        <CareerOverview />
         <NextStep
           profileCount={profileCount}
           targetCount={targetCount}
@@ -74,7 +76,7 @@ export default function DashboardPage() {
           <StatTile
             label="Tokens used"
             value={formatNumber(overview?.totals.tokens ?? 0)}
-            hint={`${formatCost(overview?.totals.estimatedCostUsd ?? 0)} estimated`}
+            hint="Provider quota applies; check provider usage"
           />
           <StatTile
             label="Failed targets"
@@ -265,7 +267,7 @@ function NextStep({
       <StepCard
         step={2}
         title="Add who you are writing to"
-        body="Professors, degree programmes, scholarships, labs, or companies. Add them one at a time, or paste a whole list."
+        body="Add hospitals, departments, professors or advertised roles. Include the original listing and requirements in your notes."
         href="/targets"
         cta="Add targets"
       />

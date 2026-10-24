@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { SquareTerminal, Plus, Globe, Braces, Lock, Search } from 'lucide-react';
 import { api, fetcher, ApiError } from '@/lib/api';
+import { ProviderContext, useEffectiveProvider } from '@/components/provider-context';
 import type { PromptSummary, Meta } from '@/lib/types';
 import { timeAgo } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ import { PageBody, PageHeader, LoadingBlock, ErrorBlock } from '@/components/sha
  * editing one.
  */
 export default function PromptsPage() {
+  const provider = useEffectiveProvider();
   const router = useRouter();
   const toast = useToast();
   const [search, setSearch] = React.useState('');
@@ -64,9 +66,9 @@ export default function PromptsPage() {
       />
 
       <PageBody className="space-y-5">
+        <ProviderContext />
         <Notice tone="accent" icon={<SquareTerminal />} title="These are yours to change">
-          Nothing about a discipline, a country, or a degree system is hard-coded anywhere else. If a prompt does not suit
-          your situation, rewrite it. Every change is versioned, so you can always go back.
+          The medical prompts cover Germany, UAE bridge roles and research outreach. You can adapt them to the opportunity. Every change is versioned.
         </Notice>
 
         <div className="relative max-w-sm">
@@ -125,7 +127,7 @@ export default function PromptsPage() {
                                 </Badge>
                               </Tooltip>
                             )}
-                            {prompt.webSearch && (
+                            {prompt.webSearch && (!provider || provider.provider === 'openai') && (
                               <Tooltip label="This prompt uses web search, so it is slower and costs more.">
                                 <Badge tone="accent">
                                   <Globe className="size-2.5" />
@@ -151,7 +153,7 @@ export default function PromptsPage() {
                         </div>
 
                         <div className="hidden shrink-0 text-right sm:block">
-                          <p className="font-[family-name:var(--font-mono)] text-xs text-[var(--color-text)]">{prompt.model}</p>
+                          <p className="font-[family-name:var(--font-mono)] text-xs text-[var(--color-text)]">{provider && provider.provider !== 'openai' ? provider.model : prompt.model}</p>
                           <p className="mt-1 text-[0.6875rem] text-[var(--color-text-faint)]">
                             v{prompt.activeVersion} of {prompt.versionCount} · {prompt.variableCount} variables
                           </p>

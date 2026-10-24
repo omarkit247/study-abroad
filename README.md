@@ -223,3 +223,145 @@ Read every draft before you send it. The system is a first draft, not a delegate
 ## License
 
 MIT
+
+## Medical career workspace
+
+The home page now opens `/career`: a Germany-first medical career planner with
+UAE bridge opportunities and exploratory dermatology, neurology and ophthalmology
+notes. The existing profiles, targets and drafting tools remain available.
+
+- Edit and explicitly save the career brief, current licensing evidence and German
+  language status. No milestone is pre-marked complete.
+- Track eight planning areas with status, next action, follow-up date and evidence.
+  These categories do not determine legal eligibility or trigger reminders.
+- Export/restore a career JSON backup; imports are validated before replacing the
+  editor and require Save to persist. The full cloud workspace export includes it.
+- Enable brief inclusion to send the saved brief, licensing/language fields and
+  specialty notes in live cloud-mode pipeline calls. Milestone correspondence
+  notes are excluded. This integration does not change local microservices.
+- Planning uses browser storage and needs no API key or paid database. AI runs
+  still use the visitor's API credits. Browser data does not automatically sync.
+
+For a hosted build set `NEXT_PUBLIC_FLOW_MODE=cloud`. Cloudflare runtime tooling
+and deployment are a separate step; a successful Next.js build alone does not
+verify Workers compatibility or its Free-plan CPU budget.
+
+### Specialty exploration and research opportunities
+
+The specialty notebook also includes gastroenterology, internal medicine and
+physical medicine and rehabilitation, with an Add specialty control for other
+interests. Older career backups gain the new blank categories without replacing
+existing notes or the user's edited brief.
+
+`/research` provides free external search links by location, specialty and role,
+plus a research shortlist. Save original sources, requirements, eligibility,
+funding, verification dates and deadlines; track application status and open a
+preselected drafting run. These entries are ordinary targets tagged
+`medical-research`, so they use existing storage, export, editing and pipeline
+features. Search links are not an automatically verified vacancy feed.
+
+### German sources and career-ops bridge
+
+`/sources` contains a reviewed directory for hospital/rehabilitation data
+(Destatis and DKV), researchers/projects (DFG GEPRIS), training authorisations
+(ÄKWL and Ärztekammer Nordrhein), and jobs (Ärztestellen and BA Jobsuche).
+Searches accept a hospital/professor name, city and specialty, with German
+specialty terminology. No record is presented as a verified current vacancy.
+
+Access distinctions are explicit: Destatis offers reusable downloads with source
+attribution; other sources are manual lookups until automated access is assessed.
+BA terms expressly restrict robots and unintended API collection, so no BA
+scraper is included. Professor identity and professional contacts should be
+verified on the employing institution’s own website. No contact guessing.
+
+The career-ops bridge was checked against omarkit247/career-ops commit
+374eff1ec7c7e581c8d1d9f0b78eef21a5110363, particularly
+lib/tracker-addition.mjs and tracker-parse.mjs. Paste headed tracker-addition TSV,
+preview records, then import into the existing target workspace. Required
+headers: company, role, status, score; optional url, date, location, notes.
+No Markdown tracker parser, report-file import, live sync or scraper execution is
+included. External status/score stay in notes; imported records start as new.
+The existing importer skips matching position-name/institution pairs; this can
+also skip different listings with identical titles at one institution.
+
+career-ops uses local Node tools, Playwright and filesystem storage. It can remain
+a separate local discovery/evaluation companion; this bridge does not claim its
+full runtime can be deployed to Cloudflare Workers Free. No new paid service or
+automated application/email sending is introduced.
+
+
+### Cloudflare Workers deployment (Free-plan target)
+
+The web workspace includes a pinned vinext 1.3.0 Cloudflare build. vinext is beta;
+keep this deployment on a preview URL until browser and live CPU checks pass.
+The Vite configuration forces cloud mode. The eight local microservices are not
+deployed. Only static assets and the stateless `/api/execute` route are included;
+there are no D1, KV, R2, image optimisation or scheduled-job bindings.
+
+From the repository root:
+
+```sh
+npm ci
+npm run build:vinext --workspace @flow/web
+```
+
+Then from `apps/web`:
+
+```sh
+npx wrangler deploy --dry-run --config dist/server/wrangler.json
+npx next typegen
+npm run typecheck
+npm run start:vinext
+```
+
+Next and vinext both generate route types under `.next`; regenerate Next types
+before running the standalone type check when switching build tools.
+
+Before publishing, confirm the account is on **Workers Free** in the Cloudflare
+dashboard. Do not upgrade the plan or enable paid add-ons. Authenticate Wrangler
+locally (`npx wrangler login`), then run `npm run deploy:vinext` from `apps/web`.
+Use the included workers.dev hostname; a purchased domain is unnecessary.
+No deployment has been performed as part of preparing this configuration.
+
+The production build and Wrangler dry run passed. The dry-run Worker bundle was
+approximately 708 KiB gzip. These checks do not establish live CPU consumption
+or browser correctness. Local runtime smoke testing was blocked by this execution
+environment (`uv_interface_addresses`); it has not passed. Check `/career`, `/research`, `/sources`, backup/import,
+and a no-key `/api/execute` request on the preview before using real records.
+If Free-plan runtime limits are exceeded, reduce runtime work instead of enabling
+billing. Build warnings include beta adapter source-map/import optimisation notes.
+
+The core planner, source directory and manual imports do not need an AI key.
+AI pipeline execution uses the configured provider and can incur **separate API
+charges**; leave it unused for a strictly zero-cost workflow. Workspace data and
+API settings stay in this browser's storage: export backups, and do not expect
+cross-device sync. Runs require the browser to remain open. This configuration
+does not introduce automatic scraping, scheduled discovery, or background runs.
+
+
+### Alternative AI providers (hosted cloud mode)
+
+Settings now supports OpenRouter free models, Google Gemini, Groq, OpenAI and
+custom public HTTPS OpenAI-compatible Chat Completions endpoints. Select the
+provider, enter its model ID, click Save provider settings, then save the matching
+API key and use Test it. Non-OpenAI providers override the OpenAI model selections
+in pipeline steps. OpenAI retains existing per-step model settings.
+
+New browsers default to `openrouter/free`; saved legacy OpenAI keys keep their
+provider. OpenRouter permits only that router or IDs ending in `:free`, without
+paid fallback. Gemini/Groq free quotas depend on account, region and model; stay
+on a free provider plan. A custom endpoint is not a guarantee of zero cost.
+Keys are isolated by provider and custom endpoint and excluded from workspace
+exports. The app server handles keys transiently to forward requests; only use
+trusted deployments and endpoints. Custom APIs need compatible bearer-key auth.
+
+Non-OpenAI calls do not use a web-search tool. Prompts explicitly restrict them
+to supplied material and unknown facts must remain unknown. JSON outputs are
+requested and parsed, but individual models may not reliably follow schemas.
+The source directory remains manual discovery. No live paid fallback is used.
+
+Validation: provider routing mocked across all five options, free-model guard,
+unsafe endpoint rejection, key isolation and JSON parsing passed; Cloudflare
+production build and type check passed. No real provider key was available for
+an authenticated inference test. This provider update awaits deployment because
+the Cloudflare connector requested reauthentication on 24 October 2026.

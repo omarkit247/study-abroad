@@ -37,9 +37,9 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Flow — study-abroad outreach',
+  title: 'Medical career workspace',
   description:
-    'Research every professor, programme, and scholarship on your list, judge the fit, and draft the message. For applicants anywhere, in any field.',
+    'Plan your path into German medical practice, explore specialties, and prepare applications with UAE opportunities as a bridge.',
 };
 
 export const viewport: Viewport = {

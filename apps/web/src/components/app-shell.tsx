@@ -46,20 +46,22 @@ interface NavItem {
 const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: 'Overview',
-    items: [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, description: 'Where everything stands' }],
+    items: [{ href: '/career', label: 'Medical career', icon: UserRound, description: 'Germany first, UAE bridge' }, { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, description: 'Where everything stands' }],
   },
   {
     label: 'Your data',
     items: [
-      { href: '/applicants', label: 'Applicants', icon: UserRound, description: 'Who is applying' },
-      { href: '/targets', label: 'Targets', icon: Target, description: 'Who you are writing to' },
+      { href: '/applicants', label: 'Professional profiles', icon: UserRound, description: 'Who is applying' },
+      { href: '/targets', label: 'Opportunities', icon: Target, description: 'Who you are writing to' },
+      { href: '/sources', label: 'German sources', icon: Target, description: 'Hospitals, professors, jobs and career-ops' },
+      { href: '/research', label: 'Research opportunities', icon: SquareTerminal, description: 'Find and track research roles' },
     ],
   },
   {
     label: 'How it works',
     items: [
       { href: '/prompts', label: 'Prompts', icon: SquareTerminal, description: 'What the model is asked' },
-      { href: '/pipelines', label: 'Pipelines', icon: Workflow, description: 'The order of the steps' },
+      { href: '/pipelines', label: 'Workflows', icon: Workflow, description: 'The order of the steps' },
     ],
   },
   {
@@ -95,10 +97,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <div className="flex h-14 items-center justify-between border-b border-[var(--color-border)] px-4">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
+          <Link href="/career" className="flex items-center gap-2.5">
             <FlowMark />
             <span className="font-[family-name:var(--font-display)] text-[0.9375rem] font-semibold tracking-tight text-[var(--color-text)]">
-              Flow
+              Career workspace
             </span>
           </Link>
           <Button variant="ghost" size="iconSm" className="lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Close navigation">

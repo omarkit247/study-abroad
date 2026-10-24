@@ -502,7 +502,7 @@ function WorkspacePanel() {
         <div className="flex items-center justify-between px-4 py-3">
           <div>
             <p className="text-[0.8125rem] font-medium text-[var(--color-text)]">Model calls</p>
-            <p className="text-[0.6875rem] text-[var(--color-text-faint)]">Sent from here to OpenAI, with your key</p>
+            <p className="text-[0.6875rem] text-[var(--color-text-faint)]">Sent to your selected provider, with your key</p>
           </div>
           <Badge tone="positive">direct</Badge>
         </div>

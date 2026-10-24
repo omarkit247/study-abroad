@@ -5,6 +5,7 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import { Workflow, PlayCircle, ArrowRight, Globe } from 'lucide-react';
 import { fetcher } from '@/lib/api';
+import { ProviderContext, useEffectiveProvider } from '@/components/provider-context';
 import type { Pipeline } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Panel, EmptyState, Badge, Tooltip } from '@/components/ui/primitives';
@@ -20,13 +21,15 @@ import { PageBody, PageHeader, LoadingBlock, ErrorBlock } from '@/components/sha
  * separate cards is the point: the arrows are the information.
  */
 export default function PipelinesPage() {
+  const provider = useEffectiveProvider();
   const { data, error, isLoading, mutate } = useSWR<Pipeline[]>('/api/pipelines', fetcher);
 
   return (
     <>
-      <PageHeader title="Pipelines" description="What happens to each target, in order." />
+      <PageHeader title="Application workflows" description="Choose the route that fits the opportunity. Medical workflows use supplied evidence and produce drafts for review." />
 
       <PageBody className="space-y-5">
+        <ProviderContext />
         {error ? (
           <ErrorBlock error={error} onRetry={() => mutate()} />
         ) : isLoading ? (
@@ -38,7 +41,7 @@ export default function PipelinesPage() {
             <EmptyState icon={<Workflow className="size-7" />} title="No pipelines" />
           </Panel>
         ) : (
-          data.map((pipeline) => {
+          [...data].sort((a,b) => Number(b.tags.includes('medical')) - Number(a.tags.includes('medical'))).map((pipeline) => {
             const steps = pipeline.steps.filter((s) => s.enabled);
 
             return (
@@ -59,7 +62,7 @@ export default function PipelinesPage() {
                   </Button>
                 </div>
 
-                <FlowPath steps={steps} />
+                <FlowPath steps={steps} webAvailable={!provider || provider.provider === 'openai'} />
               </Panel>
             );
           })
@@ -77,7 +80,7 @@ export default function PipelinesPage() {
  * sideways on a narrow screen instead of wrapping, because a wrapped sequence
  * stops looking like a sequence.
  */
-function FlowPath({ steps }: { steps: Pipeline['steps'] }) {
+function FlowPath({ steps, webAvailable }: { steps: Pipeline['steps']; webAvailable: boolean }) {
   return (
     <div className="scroll-x border-t border-[var(--color-border)] px-5 py-6">
       <div className="flex min-w-max items-center">
@@ -86,7 +89,7 @@ function FlowPath({ steps }: { steps: Pipeline['steps'] }) {
         {steps.map((step, index) => (
           <React.Fragment key={step.id}>
             <Connector />
-            <Node label={step.title} index={index + 1} web={step.prompt?.webSearch} optional={step.optional} />
+            <Node label={step.title} index={index + 1} web={webAvailable && step.prompt?.webSearch} optional={step.optional} />
           </React.Fragment>
         ))}
 

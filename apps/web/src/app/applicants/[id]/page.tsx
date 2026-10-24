@@ -196,7 +196,7 @@ export default function ApplicantEditorPage({ params }: { params: Promise<{ id: 
                         id={fieldId}
                         value={draft.headline}
                         onChange={(e) => update('headline', e.target.value)}
-                        placeholder="e.g. Environmental engineer working on low-cost water quality monitoring"
+                        placeholder="e.g. Medical graduate exploring clinical training and research roles"
                       />
                     )}
                   </Field>
@@ -235,6 +235,7 @@ export default function ApplicantEditorPage({ params }: { params: Promise<{ id: 
                     <Field label="Applying for">
                       {({ id: fieldId }) => (
                         <Select id={fieldId} value={draft.targetDegree} onChange={(e) => update('targetDegree', e.target.value)}>
+                          <option value="">Choose a role for this profile</option>
                           {(meta?.degreeLevels ?? []).map((option) => (
                             <option key={option.value} value={option.value}>
                               {option.label}
@@ -243,7 +244,7 @@ export default function ApplicantEditorPage({ params }: { params: Promise<{ id: 
                         </Select>
                       )}
                     </Field>
-                    <Field label="Intake" hint="e.g. Autumn 2027">
+                    <Field label="Availability / start conditions" hint="e.g. Research role: available from…; clinical role: subject to licensing">
                       {({ id: fieldId }) => (
                         <Input id={fieldId} value={draft.targetIntake} onChange={(e) => update('targetIntake', e.target.value)} />
                       )}
@@ -300,7 +301,7 @@ export default function ApplicantEditorPage({ params }: { params: Promise<{ id: 
                         <div className="grid gap-3 sm:grid-cols-2">
                           <Field label="Degree">
                             {({ id: fid }) => (
-                              <Input id={fid} value={item.degree} onChange={(e) => patch({ degree: e.target.value })} placeholder="BEng, MSc, Licence" />
+                              <Input id={fid} value={item.degree} onChange={(e) => patch({ degree: e.target.value })} placeholder="MD / medical degree, institution and year" />
                             )}
                           </Field>
                           <Field label="Field">
