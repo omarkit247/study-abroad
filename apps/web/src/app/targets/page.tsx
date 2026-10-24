@@ -91,8 +91,8 @@ export default function TargetsPage() {
   return (
     <>
       <PageHeader
-        title="Targets"
-        description="Professors, degree programmes, scholarships, labs, or companies. Anything you would write to."
+        title="Opportunities"
+        description="Hospitals, departments, professors, projects and advertised roles in Germany or the UAE."
         action={
           <>
             <Button variant="secondary" onClick={() => setImporting(true)}>
@@ -114,7 +114,7 @@ export default function TargetsPage() {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search names and universities"
+              placeholder="Search roles, hospitals, universities and contacts"
               aria-label="Search targets"
               className="pl-9"
             />

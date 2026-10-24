@@ -9,3 +9,5 @@ export * from './schemas/pipeline.js';
 export * from './schemas/run.js';
 export * from './schemas/settings.js';
 export * from './builtins.js';
+
+export * from './medical-workflows.js';

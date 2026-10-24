@@ -9,6 +9,11 @@
 
 /** What an applicant is aiming for. `other` keeps the list open. */
 export const DEGREE_LEVELS = [
+  { value: 'medical-residency', label: 'Clinical training / Assistenzarzt (eligibility to verify)' },
+  { value: 'hospitation', label: 'Hospitation / observership' },
+  { value: 'research-assistant', label: 'Research assistant' },
+  { value: 'teaching-assistant', label: 'Teaching assistant' },
+  { value: 'clinical-support', label: 'Clinical support / coordination' },
   { value: 'bachelors', label: "Bachelor's" },
   { value: 'masters', label: "Master's" },
   { value: 'phd', label: 'PhD / doctorate' },
@@ -22,6 +27,8 @@ export const DEGREE_LEVELS = [
 
 /** Who or what the applicant is writing to. */
 export const TARGET_KINDS = [
+  { value: 'hospital', label: 'Hospital / department', hint: 'Clinical training, employment or observership contact' },
+  { value: 'job', label: 'Job / advertised role', hint: 'A specific vacancy with requirements to check' },
   { value: 'professor', label: 'Professor', hint: 'A specific academic you want to work with' },
   { value: 'program', label: 'Program', hint: 'A named degree program at an institution' },
   { value: 'university', label: 'University', hint: 'An institution-level contact or admissions office' },

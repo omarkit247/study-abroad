@@ -26,6 +26,7 @@ import {
   settingsSchema,
   buildDefaultPrompts,
   buildDefaultPipelines,
+  buildMedicalDefaults,
   DEGREE_LEVELS,
   TARGET_KINDS,
   TARGET_STATUSES,
@@ -70,12 +71,20 @@ const now = () => new Date().toISOString();
 
 /** Seeds the prompt library and pipelines on first visit. */
 function ensureSeeded(): void {
+  const medical = buildMedicalDefaults(now(), createId);
+
   if (readList('prompts').length === 0) {
     writeList('prompts', buildDefaultPrompts(now(), createId));
   }
   if (readList('pipelines').length === 0) {
     writeList('pipelines', buildDefaultPipelines(now(), createId));
   }
+  const prompts = readList<Json>('prompts');
+  const missingPrompts = medical.prompts.filter(p => !prompts.some(row => row.key === p.key));
+  if (missingPrompts.length) writeList('prompts', [...missingPrompts, ...prompts]);
+  const pipelines = readList<Json>('pipelines');
+  const missingPipelines = medical.pipelines.filter(p => !pipelines.some(row => row.id === p.id));
+  if (missingPipelines.length) writeList('pipelines', [...missingPipelines, ...pipelines]);
 }
 
 /** Turns a Zod failure into the same envelope the services produce. */

@@ -61,7 +61,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: 'How it works',
     items: [
       { href: '/prompts', label: 'Prompts', icon: SquareTerminal, description: 'What the model is asked' },
-      { href: '/pipelines', label: 'Pipelines', icon: Workflow, description: 'The order of the steps' },
+      { href: '/pipelines', label: 'Workflows', icon: Workflow, description: 'The order of the steps' },
     ],
   },
   {

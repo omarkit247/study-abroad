@@ -1,6 +1,6 @@
 export const AI_PROVIDERS = {
   openrouter: { label: 'OpenRouter — free models', baseURL: 'https://openrouter.ai/api/v1', model: 'openrouter/free', keyURL: 'https://openrouter.ai/settings/keys' },
-  gemini: { label: 'Google Gemini', baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.5-flash-lite', keyURL: 'https://aistudio.google.com/apikey' },
+  gemini: { label: 'Google Gemini', baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-3.1-flash-lite', keyURL: 'https://aistudio.google.com/apikey' },
   groq: { label: 'Groq', baseURL: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile', keyURL: 'https://console.groq.com/keys' },
   openai: { label: 'OpenAI', baseURL: 'https://api.openai.com/v1', model: 'gpt-5-mini', keyURL: 'https://platform.openai.com/api-keys' },
   custom: { label: 'Custom OpenAI-compatible API', baseURL: '', model: '', keyURL: '' },
